@@ -1,5 +1,7 @@
-<img width="1357" height="905" alt="image" src="https://github.com/user-attachments/assets/e32a2ba5-59f7-4de5-9eaf-b3207f54d176" /># BREAST-CANCER-PREDICTION
+# BREAST-CANCER-PREDICTION
 A machine learning–based system for early breast cancer detection using the Breast Cancer Wisconsin dataset. Data preprocessing, feature scaling, and train–test split are applied. Logistic Regression and Decision Tree classify tumors as benign or malignant and are evaluated using accuracy, precision, recall, F1-score, and confusion matrix.
+
+
 **ALGORITHM:**
 Step 0: Start
 Step 1: Import Required Libraries
@@ -28,3 +30,5 @@ Step 12: Display Results
 Visualize confusion matrices and display evaluation metrics.
 Step 13: End
 
+
+<img width="1357" height="905" alt="image" src="https://github.com/user-attachments/assets/e32a2ba5-59f7-4de5-9eaf-b3207f54d176" />
