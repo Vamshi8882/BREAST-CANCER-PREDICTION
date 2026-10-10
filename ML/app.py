@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import numpy as np
@@ -46,11 +45,14 @@ CLASS_NAMES = {0: "Benign (B)", 1: "Malignant (M)"}
 #       data.csv
 # ============================================================
 def locate_dataset():
+    """Find data.csv relative to this file, not the current working directory."""
     script_dir = Path(__file__).resolve().parent
     repo_dir = script_dir.parent
 
+    # First try the exact GitHub repository layout.
     candidates = [
         script_dir / "DataSet Breast Cancer" / "data.csv",
+        repo_dir / "ML" / "DataSet Breast Cancer" / "data.csv",
         repo_dir / "DataSet Breast Cancer" / "data.csv",
         script_dir / "data.csv",
         repo_dir / "data.csv",
@@ -58,38 +60,55 @@ def locate_dataset():
 
     for path in candidates:
         if path.is_file():
-            return path
+            return path.resolve()
 
-    # Fallback for capitalization differences.
-    for root in (script_dir, repo_dir):
-        if not root.exists():
+    # Case-insensitive lookup of the dataset folder and CSV filename.
+    # Search only immediate children to avoid traversing .git or other large folders.
+    roots = (script_dir, repo_dir)
+    seen = set()
+
+    for root in roots:
+        root = root.resolve()
+        if root in seen or not root.is_dir():
             continue
+        seen.add(root)
 
         try:
-            for path in root.rglob("*"):
-                if not path.is_file():
-                    continue
-
-                if path.name.lower() != "data.csv":
-                    continue
-
-                parent_name = path.parent.name.lower()
-
-                if (
-                    parent_name == "dataset breast cancer".lower()
-                    or path.parent == root
-                ):
-                    return path
+            for child in root.iterdir():
+                if child.is_dir() and child.name.casefold() == "dataset breast cancer":
+                    for csv_file in child.iterdir():
+                        if csv_file.is_file() and csv_file.name.casefold() == "data.csv":
+                            return csv_file.resolve()
+                if child.is_file() and child.name.casefold() == "data.csv":
+                    return child.resolve()
         except OSError:
-            pass
+            continue
 
-    checked_paths = "\n".join(str(p) for p in candidates)
+    # Give a useful diagnostic showing what Streamlit Cloud can actually see.
+    visible_items = []
+    for root in (script_dir, repo_dir):
+        if root.is_dir():
+            try:
+                visible_items.append(f"Contents of {root}:")
+                visible_items.extend(
+                    f"  - {item.name}{'/' if item.is_dir() else ''}"
+                    for item in sorted(root.iterdir(), key=lambda p: p.name.lower())
+                )
+            except OSError as exc:
+                visible_items.append(f"  Could not list {root}: {exc}")
+
+    checked_paths = "\n".join(f"- {path}" for path in candidates)
+    visible_text = "\n".join(visible_items)
 
     raise FileNotFoundError(
-        "Could not locate data.csv.\n\n"
+        "Could not locate the breast cancer dataset file.\n\n"
+        "Expected the CSV at: ML/DataSet Breast Cancer/data.csv\n\n"
         "Paths checked:\n"
         f"{checked_paths}\n\n"
-        "Confirm that the CSV is committed to GitHub."
+        "Items visible to the app:\n"
+        f"{visible_text}\n\n"
+        "Confirm that the folder and data.csv are committed to GitHub. "
+        "GitHub paths are case-sensitive."
     )
 
 
